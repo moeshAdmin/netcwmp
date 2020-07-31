@@ -402,13 +402,13 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
     cwmp_uint32_t msglength = cwmp_chunk_length(session->readers);
 
     
-    if (true)
-    {
+    //if (1==1)
+    //{
         session->newdata = CWMP_NO;
         cwmp_log_debug("analyse receive length is 0");
 	    goto eventcheck;
 //        return CWMP_ERROR;
-    }
+    //}
     
     doctmppool = pool_create(POOL_DEFAULT_SIZE);
 
