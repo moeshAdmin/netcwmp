@@ -28,6 +28,7 @@
 #include "cwmp_agent.h"
 #include <cwmp/session.h>
 #include "modules/data_model.h"
+#include <string.h>
 
 #define CWMP_TRUE   1
 
@@ -420,17 +421,26 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
 
     cwmp_log_debug("agent analyse xml: \n%s", xmlbuf);
 
+    /*
     doc = XmlParseBuffer(doctmppool, xmlbuf);
     if (!doc)
     {
         cwmp_log_debug("analyse create doc null\n");
-        //cwmp_chunk_write_string(session->writers, xml_fault, TRstrlen(xml_fault), session->envpool);
-        newdoc = NULL;
-        rc = CWMP_OK;
+        cwmp_chunk_write_string(session->writers, xml_fault, TRstrlen(xml_fault), session->envpool);
         goto finished;
-    }
+    }*/
 
-    method = cwmp_get_rpc_method_name(doc);
+    //method = cwmp_get_rpc_method_name(doc);
+    if (!doc){
+        char* loc = strstr(xmlbuf, "cwmp:GetParameterNames");
+        if (loc) {
+            method = CWMP_RPC_GETPARAMETERNAMES;
+        }
+    }else{
+        method = cwmp_get_rpc_method_name(doc);
+    }
+    
+
     cwmp_log_debug("analyse method is: %s\n", method);
 
 
