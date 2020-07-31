@@ -423,7 +423,7 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
     doc = XmlParseBuffer(doctmppool, xmlbuf);
     if (!doc)
     {
-        //cwmp_log_debug("analyse create doc null\n");
+        cwmp_log_debug("analyse create doc null\n");
         //cwmp_chunk_write_string(session->writers, xml_fault, TRstrlen(xml_fault), session->envpool);
         newdoc = NULL;
         rc = CWMP_OK;

@@ -101,7 +101,7 @@ int main(int argc, char **argv)
     cwmp_pid_t pid;
     cwmp_t * cwmp;
 
-    int syslog_enable = 0;
+    int syslog_enable = 1;
     int cwmp_enable = 0;
 
 #ifdef WIN32
@@ -110,8 +110,8 @@ int main(int argc, char **argv)
 #endif
     pid = getpid();
 
-    //cwmp_log_init("/var/log/cwmpd.log", CWMP_LOG_DEBUG);
-    cwmp_log_init(NULL, CWMP_LOG_DEBUG);
+    cwmp_log_init("/var/log/cwmpd.log", CWMP_LOG_DEBUG);
+    //cwmp_log_init(NULL, CWMP_LOG_DEBUG);
     cwmp_global_pool = pool_create(POOL_DEFAULT_SIZE);
     cwmp = pool_palloc(cwmp_global_pool, sizeof(cwmp_t));
 
