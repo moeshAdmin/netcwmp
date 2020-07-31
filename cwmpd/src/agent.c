@@ -402,11 +402,11 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
     cwmp_uint32_t msglength = cwmp_chunk_length(session->readers);
 
     
-    if (msglength<= 0)
+    if (true)
     {
         session->newdata = CWMP_NO;
         cwmp_log_debug("analyse receive length is 0");
-	goto eventcheck;
+	    goto eventcheck;
 //        return CWMP_ERROR;
     }
     
