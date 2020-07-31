@@ -402,16 +402,15 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
     cwmp_uint32_t msglength = cwmp_chunk_length(session->readers);
 
     
-    //if (1==1)
-    //{
+    if (msglength<= 0)
+    {
         session->newdata = CWMP_NO;
-        newdoc = NULL;
         cwmp_log_debug("analyse receive length is 0");
-	    goto eventcheck;
+	goto eventcheck;
 //        return CWMP_ERROR;
-    //}
+    }
     
-    doctmppool = pool_create(POOL_DEFAULT_SIZE);
+    doctmppool = pool_create((int)4096);
 
     xmlbuf = pool_palloc(doctmppool, msglength+32);
 
@@ -424,7 +423,7 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
     doc = XmlParseBuffer(doctmppool, xmlbuf);
     if (!doc)
     {
-        //cwmp_log_debug("analyse create doc null\n");
+        cwmp_log_debug("analyse create doc null\n");
         //cwmp_chunk_write_string(session->writers, xml_fault, TRstrlen(xml_fault), session->envpool);
         //goto finished;
         session->newdata = CWMP_YES;
@@ -492,7 +491,7 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
     else
     {
     	//check event queue
-    	//newdoc = cwmp_session_create_event_response_message(session, doc, doctmppool);
+    	newdoc = cwmp_session_create_event_response_message(session, doc, doctmppool);
 
     }
 
