@@ -491,7 +491,7 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
     else
     {
     	//check event queue
-    	newdoc = cwmp_session_create_event_response_message(session, doc, doctmppool);
+    	//newdoc = cwmp_session_create_event_response_message(session, doc, doctmppool);
 
     }
 
