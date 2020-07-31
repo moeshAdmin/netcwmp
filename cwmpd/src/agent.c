@@ -29,8 +29,6 @@
 #include <cwmp/session.h>
 #include <libcwmp/src/inc/cwmp_private.h>
 #include "modules/data_model.h"
-#include "qtn/qcsapi.h"
-#include <net80211/ieee80211_dfs_reentry.h>
 
 #define CWMP_TRUE   1
 
