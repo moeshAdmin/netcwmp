@@ -810,7 +810,7 @@ xmlnode_t * cwmp_get_header_node(xmldoc_t *  doc)
 {
     xmlnode_t *  node;
     xmlnode_t *  root;
-    ASSERT(doc != NULL);
+    //ASSERT(doc != NULL);
 
     if (! (root = XmlNodeGetDocRoot(doc)))
     {
@@ -1796,7 +1796,7 @@ xmlnode_t * cwmp_create_event_node(env_t * env ,  xmlnode_t * parent, const even
 	if (pe[count]->event == INFORM_MREBOOT ) //|| pe[count]->event == INFORM_BOOTSTRAP)
 	{
         	ESA(eventCommandKeyNode, cwmp_xml_create_child_node(env ,  eventStructNode, NULL, "CommandKey", pe[count]->command_key));
-	}
+	}
 	else
 	{
 		ESA(eventCommandKeyNode, cwmp_xml_create_child_node(env ,  eventStructNode, NULL, "CommandKey", NULL));
