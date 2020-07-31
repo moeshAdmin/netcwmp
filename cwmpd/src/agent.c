@@ -425,8 +425,9 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
     {
         //cwmp_log_debug("analyse create doc null\n");
         //cwmp_chunk_write_string(session->writers, xml_fault, TRstrlen(xml_fault), session->envpool);
-        //goto finished;
-        doc = XmlParseBuffer(doctmppool, xmlbuf);
+        newdoc = NULL;
+        rc = CWMP_OK;
+        goto finished;
     }
 
     method = cwmp_get_rpc_method_name(doc);
