@@ -422,6 +422,9 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
     cwmp_log_debug("agent analyse xml: \n%s", xmlbuf);
 
     doc = XmlParseBuffer(doctmppool, xmlbuf);
+
+    cwmp_log_debug("doctmppool: %s\n", doctmppool);
+    cwmp_log_debug("POOL_DEFAULT_SIZE: %s\n", POOL_DEFAULT_SIZE);
     /*
     if (!doc)
     {
@@ -439,13 +442,8 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
     }else{
         method = cwmp_get_rpc_method_name(doc);
     }
-    
 
     cwmp_log_debug("analyse method is: %s\n", method);
-
-
-
- 
 
     cwmp_chunk_clear(session->writers);
     pool_clear(session->envpool);
