@@ -23,20 +23,17 @@
  * Copyright 2013-2014  Mr.x(Mr.x) <netcwmp@gmail.com>          *
  *                                                                      *
  ***********************************************************************/
-#include <sys/time.h>
+
 #include "cwmp_module.h"
 #include "cwmp_agent.h"
 #include <cwmp/session.h>
-#include <libcwmp/src/inc/cwmp_private.h>
 #include "modules/data_model.h"
 
 #define CWMP_TRUE   1
 
 #define MAX_SESSION_RETRY 3
 
-#define SCAN_FLAG (IEEE80211_PICK_NOPICK_BG | IEEE80211_PICK_BG_PASSIVE_NORMAL)
-#define SCAN_INACT_WAIT 40
-#define SCAN_TIMEOUT 30
+
 
 enum
 {
@@ -72,7 +69,7 @@ int cwmp_agent_retry_session(cwmp_session_t * session)
     }
     default:
     {
-        sec = 60 + rand()%30; //60~90
+        sec = 5 + rand()%30; //5~35
         break;
     }
     }
@@ -83,8 +80,17 @@ int cwmp_agent_retry_session(cwmp_session_t * session)
         sec--;
     }
 
-    session->retry_count ++;
-    return CWMP_OK;
+    if (session->retry_count > MAX_SESSION_RETRY)
+    {
+        session->retry_count = 0;
+        return CWMP_TIMEOUT;
+    }
+    else
+    {
+        session->retry_count ++;
+        return CWMP_OK;
+    }
+
 }
 
 
@@ -116,7 +122,7 @@ int cwmp_agent_create_datetimes(datatime_t *nowtime)
 
 
 
-//取得active event以及count
+//È¡µÃactive eventÒÔ¼°count
 int cwmp_agent_get_active_event(cwmp_t *cwmp, cwmp_session_t * session,  event_list_t **pevent_list)
 {
     event_list_t * el;
@@ -134,29 +140,25 @@ int cwmp_agent_get_active_event(cwmp_t *cwmp, cwmp_session_t * session,  event_l
     for(i=0; i<elsize; i++)
     {      
         
-    if(pec[i]  && pec[i]->ref > 0)
+	if(pec[i]  && pec[i]->ref > 0)
         {
          
             event_code_t * ec = pec[i];
             ev = cwmp_create_event_code(session->env);
-            memcpy(ev, ec, sizeof(event_code_t));
-#if 0
             ev->event = ec->event;
             ev->code = ec->code;
-    
-            if (pec[i]->event == INFORM_MREBOOT || pec[i]->event == INFORM_MDOWNLOAD)
+	
+            if (pec[i]->event == INFORM_MREBOOT || pec[i]->event == INFORM_BOOTSTRAP)
             {
                 strcpy(ev->command_key , ec->command_key);
             }
-#endif
-        
+	    
   
             el->events[el->count++] = ev;
             ev = NULL;
 
         }
     }
-#if 0 /* INFORM_BOOT should be explicit set, remove this */
     if (el->count == 0)
     {
         ev = cwmp_create_event_code(session->env);
@@ -164,14 +166,14 @@ int cwmp_agent_get_active_event(cwmp_t *cwmp, cwmp_session_t * session,  event_l
         ev->code = CWMP_INFORM_EVENT_CODE_1;
         el->events[el->count++] = ev;
     }
-#endif
+
 
     *pevent_list = el;
 
     return CWMP_OK;
 
 
-    
+	
 }
 
 
@@ -200,7 +202,7 @@ void cwmp_agent_start_session(cwmp_t * cwmp)
     {
         if (cwmp->new_request == CWMP_NO)
         {
-            //cwmp_log_debug("No new request from ACS\n");
+            cwmp_log_debug("No new request from ACS\n");
             sleep(2);
             //cwmp->new_request = CWMP_YES;
             continue;
@@ -213,7 +215,7 @@ void cwmp_agent_start_session(cwmp_t * cwmp)
         session->timeout = cwmp_conf_get_int("cwmpd:http_timeout");
         //cwmp_session_set_timeout(cwmp_conf_get_int("cwmpd:http_timeout"));
         cwmp_log_debug("session timeout is %d", session->timeout);
-        
+		
         cwmp_session_open(session);
 
         while (!session_close)
@@ -237,20 +239,20 @@ void cwmp_agent_start_session(cwmp_t * cwmp)
                 }
                 break;
             case CWMP_ST_INFORM:
-                evtlist = NULL;
-                cwmp_log_debug("session stutus: INFORM\n");
-                cwmp_agent_get_active_event(cwmp, session,  & evtlist);
-                if(evtlist != NULL)
-                {
-                    cwmp_event_clear_active(cwmp);
-                }
-                cwmp_log_debug("session stutus: INFORM2\n");
-                if (cwmp->acs_auth && session->dest->auth.state == AUTH_STATE_INITIAL)
-                {
+				evtlist = NULL;
+				cwmp_log_debug("session stutus: INFORM\n");
+				cwmp_agent_get_active_event(cwmp, session,  & evtlist);
+				if(evtlist != NULL)
+				{
+					cwmp_event_clear_active(cwmp);
+				}
+				cwmp_log_debug("session stutus: INFORM2\n");
+                if (cwmp->acs_auth)
+                {			
                     cwmp_session_set_auth(session,   cwmp->acs_user  , cwmp->acs_pwd );
-                }               
+                }				
 
-                cwmp_log_debug("session stutus: INFORM3\n");
+				cwmp_log_debug("session stutus: INFORM3\n");
                 newdoc = cwmp_session_create_inform_message(session, evtlist, session->envpool);
 
                 cwmp_write_doc_to_chunk(newdoc, session->writers,  session->envpool);
@@ -271,23 +273,23 @@ void cwmp_agent_start_session(cwmp_t * cwmp)
 
                 if (rv == CWMP_OK)
                 {
-                    cwmp_log_debug("session data sended OK, rv=%d", rv);
-                    session->status = CWMP_ST_RECV;
+					cwmp_log_debug("session data sended OK, rv=%d", rv);
+					session->status = CWMP_ST_RECV;
                 }
-                else
-                {
-                    cwmp_log_debug("session data sended faild! rv=%d", rv);
-                    session->status = CWMP_ST_EXIT;
-                    /*
-                    if (rv == CWMP_COULDNOT_CONNECT)
-                    {
-                        session->status = CWMP_ST_RETRY;
-                    }
-                    else
+				else
+				{
+					cwmp_log_debug("session data sended faild! rv=%d", rv);
+					session->status = CWMP_ST_EXIT;
+					/*
+					if (rv == CWMP_COULDNOT_CONNECT)
+					{
+						session->status = CWMP_ST_RETRY;
+					}
+					else
                     {
                         session->status = CWMP_ST_EXIT;
                     }
-                    */
+					*/
                 }
      
 
@@ -300,11 +302,7 @@ void cwmp_agent_start_session(cwmp_t * cwmp)
 
                 if (rv == CWMP_OK)
                 {
-                    if (cwmp->acs_auth && session->dest->auth.active == CWMP_FALSE &&
-                        session->dest->auth.state == AUTH_STATE_RX_CHALLENGE_REQUEST)
-                        session->status = CWMP_ST_SEND;
-                    else
-                        session->status = CWMP_ST_ANSLYSE;
+                    session->status = CWMP_ST_ANSLYSE;
                 }
                 else
                 {
@@ -325,10 +323,10 @@ void cwmp_agent_start_session(cwmp_t * cwmp)
                 }
                 break;
             case CWMP_ST_RETRY:
-                cwmp_log_debug("session stutus: RETRY");
+				cwmp_log_debug("session stutus: RETRY");
                 if (cwmp_agent_retry_session(session) == CWMP_TIMEOUT)
                 {
-                    cwmp_log_debug("session retry timeover, go out");
+					cwmp_log_debug("session retry timeover, go out");
                     session->status = CWMP_ST_EXIT;
                 }
                 else
@@ -339,8 +337,8 @@ void cwmp_agent_start_session(cwmp_t * cwmp)
             case CWMP_ST_END:
                 //close connection of ACS
                 cwmp_log_debug("session stutus: END");
-                //run task from queue
-        
+				//run task from queue
+		
                 if (session->newdata == CWMP_YES)
                 {
                     session->status = CWMP_ST_SEND;
@@ -365,7 +363,7 @@ void cwmp_agent_start_session(cwmp_t * cwmp)
 
 
             default:
-                cwmp_log_debug("Unknown session stutus");
+				cwmp_log_debug("Unknown session stutus");
                 break;
             }//end switch
 
@@ -376,18 +374,13 @@ void cwmp_agent_start_session(cwmp_t * cwmp)
         cwmp_log_debug("session stutus: EXIT");
         cwmp_session_free(session);
         session = NULL;
-        if(cwmp->pinform_enable == 1){
-            gettimeofday(&inform_time, NULL);
-            cwmp_log_debug("send queue condition signal to update the wait time");
-            queue_cond_sig(cwmp->queue);
-        }
 
-        int newtaskres = cwmp_agent_run_tasks(cwmp);
-        if(newtaskres == CWMP_YES)
-        {
-            cwmp->new_request = CWMP_YES;
-        }
-
+		int newtaskres = cwmp_agent_run_tasks(cwmp);
+		if(newtaskres == CWMP_YES)
+		{
+			cwmp->new_request = CWMP_YES;
+		}
+	
 
     }//end while(TRUE)
 
@@ -404,17 +397,17 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
     xmldoc_t *   newdoc = NULL;
     int rc;
 
-    static char * xml_fault = "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:cwmp=\"urn:dslforum-org:cwmp-1-0\" xmlns=\"urn:dslforum-org:cwmp-1-0\"><SOAP-ENV:Body SOAP-ENV:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\"  id=\"_0\"><SOAP-ENV:Fault>Error Message</SOAP-ENV:Fault></SOAP-ENV:Body></SOAP-ENV:Envelope>";
-
+    //static char * xml_fault = "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:cwmp=\"urn:dslforum-org:cwmp-1-0\" xmlns=\"urn:dslforum-org:cwmp-1-0\"><SOAP-ENV:Body SOAP-ENV:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\"  id=\"_0\"><SOAP-ENV:Fault>Error Message</SOAP-ENV:Fault></SOAP-ENV:Body></SOAP-ENV:Envelope>";
+    static char * xml_fault = "\0";
     cwmp_uint32_t msglength = cwmp_chunk_length(session->readers);
 
     
-    if (msglength<= 0||1==1)
+    if (msglength<= 0)
     {
         session->newdata = CWMP_NO;
         cwmp_log_debug("analyse receive length is 0");
-        goto eventcheck;
-        //return CWMP_ERROR;
+	goto eventcheck;
+//        return CWMP_ERROR;
     }
     
     doctmppool = pool_create(POOL_DEFAULT_SIZE);
@@ -433,18 +426,13 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
         //cwmp_log_debug("analyse create doc null\n");
         //cwmp_chunk_write_string(session->writers, xml_fault, TRstrlen(xml_fault), session->envpool);
         //goto finished;
-        newdoc = NULL;
+        session->newdata = CWMP_YES;
+        cwmp_write_doc_to_chunk(newdoc, session->writers,  session->envpool);
         rc = CWMP_OK;
-        goto finished;
-
     }
 
     method = cwmp_get_rpc_method_name(doc);
     cwmp_log_debug("analyse method is: %s\n", method);
-
-
-
- 
 
     cwmp_chunk_clear(session->writers);
     pool_clear(session->envpool);
@@ -456,7 +444,6 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
     }
     else if (TRstrcmp(method, CWMP_RPC_INFORMRESPONSE) == 0)
     {
-        cwmp_session_handle_informresponse_message(session, doc, doctmppool);
         newdoc = NULL;
     }
     else if (TRstrcmp(method, CWMP_RPC_GETPARAMETERNAMES) == 0)
@@ -481,7 +468,6 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
     }
    else if (TRstrcmp(method, CWMP_RPC_TRANSFERCOMPLETERESPONSE) == 0)
     {
-        cwmp_session_handle_transfercompleteresponse_message(session, doc, doctmppool);
         newdoc = NULL;
     }
     else if (TRstrcmp(method, CWMP_RPC_REBOOT) == 0)
@@ -501,46 +487,45 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
     {
         newdoc = cwmp_session_create_factoryreset_response_message(session, doc, doctmppool);
     }
-    
+	
     else
     {
-        //check event queue
-        //newdoc = cwmp_session_create_event_response_message(session, doc, doctmppool);
+    	//check event queue
+    	//newdoc = cwmp_session_create_event_response_message(session, doc, doctmppool);
 
     }
 
 
+    cwmp_t * cwmp = session->cwmp;
     if(newdoc == NULL)
     {
         cwmp_log_debug("agent analyse newdoc is null. ");
-        
+		
 eventcheck:
-    {
-        cwmp_t * cwmp = session->cwmp;
-        cwmp_log_debug("agent analyse begin check global event, %d", cwmp->event_global.event_flag);
-        
-        //check global event for transfercomplete
-    
-        if(cwmp->event_global.event_flag & EVENT_REBOOT_TRANSFERCOMPLETE_FLAG)
-        {
-            /* keep EVENT_REBOOT_TRANSFERCOMPLETE_FLAG to enable retry until it's confirmed,
-            according spec A.3.3.2 TransferComplete */
-            //cwmp->event_global.event_flag &=  ~EVENT_REBOOT_TRANSFERCOMPLETE_FLAG;
-            if(!doctmppool)
-            {
-                doctmppool = pool_create(POOL_DEFAULT_SIZE);
-            }
-            event_code_t ec;
-            ec.event = INFORM_TRANSFERCOMPLETE;
-            TRstrncpy(ec.command_key, cwmp->event_global.event_key, COMMAND_KEY_LEN);
-            ec.fault_code = cwmp->event_global.fault_code;
-            ec.start = cwmp->event_global.start;
-            ec.end = cwmp->event_global.end;
-            newdoc = cwmp_session_create_transfercomplete_message(session, &ec, doctmppool);    
+	{
+	   	
+		cwmp_log_debug("agent analyse begin check global event, %d", cwmp->event_global.event_flag);
+		
+		//check global event for transfercomplete
+	
+		if(cwmp->event_global.event_flag & EVENT_REBOOT_TRANSFERCOMPLETE_FLAG)
+		{
+			cwmp->event_global.event_flag &=  ~EVENT_REBOOT_TRANSFERCOMPLETE_FLAG;
+			if(!doctmppool)
+			{
+				doctmppool = pool_create(POOL_DEFAULT_SIZE);
+			}
+			event_code_t ec;
+			ec.event = INFORM_TRANSFERCOMPLETE;
+			TRstrncpy(ec.command_key, cwmp->event_global.event_key, COMMAND_KEY_LEN);
+			ec.fault_code = cwmp->event_global.fault_code;
+			ec.start = cwmp->event_global.start;
+			ec.end = cwmp->event_global.end;
+			newdoc = cwmp_session_create_transfercomplete_message(session, &ec, doctmppool);	
 
-        }
-        
-    }
+		}
+		
+	}
 
     }
 
@@ -550,19 +535,19 @@ eventcheck:
     {
         session->newdata = CWMP_YES;
         cwmp_write_doc_to_chunk(newdoc, session->writers,  session->envpool);
-    rc = CWMP_OK;
+	rc = CWMP_OK;
     }
     else
-    {   
-    rc = CWMP_ERROR;
+    {  	
+	rc = CWMP_ERROR;
     }
-    
+	
 finished:
-    if(doctmppool  != NULL)
-    {
-        pool_destroy(doctmppool);
-    }
-    
+	if(doctmppool  != NULL)
+	{
+	    pool_destroy(doctmppool);
+	}
+	
     return rc;
 }
 
@@ -587,7 +572,7 @@ static void print_param(parameter_node_t * param, int level)
   child = param->child;
 
   if(!child)
-    return;
+	return;
   print_param(child, level+1);
 
   parameter_node_t * next = child->next_sibling;
@@ -598,7 +583,7 @@ static void print_param(parameter_node_t * param, int level)
     next = next->next_sibling;
  }
 
-    
+	
 }
 
 
@@ -609,14 +594,11 @@ void cwmp_agent_session(cwmp_t * cwmp)
     char value[1024]= {0};
     char local_ip[32];
 
-    char envstr[INI_BUFFERSIZE] = {0};
-    char encstr[INI_BUFFERSIZE] = {0};
-    char *rootName = cwmp->root->name;
+    char * envstr;
+    char * encstr;
 
-//    envstr = "SOAP-ENV"; //cwmp_conf_get("cwmp:soap_env");
-//    encstr = "SOAP-ENC"; // cwmp_conf_get("cwmp:soap_enc");
-    cwmp_conf_get("cwmp:soap_env", envstr);
-    cwmp_conf_get("cwmp:soap_enc", encstr);
+    envstr = "SOAP-ENV"; //cwmp_conf_get("cwmp:soap_env");
+    encstr = "SOAP-ENC"; // cwmp_conf_get("cwmp:soap_enc");
 
     cwmp_set_envelope_ns(envstr, encstr);
 
@@ -627,42 +609,29 @@ void cwmp_agent_session(cwmp_t * cwmp)
     }
 
     print_param(cwmp->root, 0);
+    
 
-    /* Replace InternetGatewayDeviceModule with cwmp->root->name to support both TR-098 and TR-181, data model is configured in device.xml */
-    CWMP_SPRINTF_PARAMETER_NAME(name, 3, rootName, ManagementServerModule, URLModule);
+
+    CWMP_SPRINTF_PARAMETER_NAME(name, 3, InternetGatewayDeviceModule, ManagementServerModule, URLModule);
     cwmp_data_set_parameter_value(cwmp, cwmp->root, name, cwmp->acs_url, TRstrlen(cwmp->acs_url), cwmp->pool);
 
-    CWMP_SPRINTF_PARAMETER_NAME(name, 3, rootName, ManagementServerModule, ConnectionRequestURLModule);
+    CWMP_SPRINTF_PARAMETER_NAME(name, 3, InternetGatewayDeviceModule, ManagementServerModule, ConnectionRequestURLModule);
     TRsnprintf(value, 1024, "http://%s:%d", local_ip, cwmp->httpd_port);
     cwmp_data_set_parameter_value(cwmp, cwmp->root, name, value, TRstrlen(value), cwmp->pool);
 
-    CWMP_SPRINTF_PARAMETER_NAME(name, 3, rootName, ManagementServerModule, AliasBasedAddressing);
-    cwmp_data_set_parameter_value(cwmp, cwmp->root, name, AliasBasedAddressingValue, TRstrlen(AliasBasedAddressingValue), cwmp->pool);
-
-    CWMP_SPRINTF_PARAMETER_NAME(name, 3, rootName, ManagementServerModule, PeriodicInformEnableModule);
-    TRsnprintf(value, 1024, "%d", cwmp->pinform_enable);
-    cwmp_data_set_parameter_value(cwmp, cwmp->root, name, value, 1, cwmp->pool);
-
-    CWMP_SPRINTF_PARAMETER_NAME(name, 3, rootName, ManagementServerModule, PeriodicInformIntervalModule);
-    TRsnprintf(value, 1024, "%d", cwmp->pinform_interval);
-    cwmp_data_set_parameter_value(cwmp, cwmp->root, name, value, 1, cwmp->pool);
-
-    CWMP_SPRINTF_PARAMETER_NAME(name, 3, rootName, DeviceInfoModule, ManufacturerModule);
+    CWMP_SPRINTF_PARAMETER_NAME(name, 3, InternetGatewayDeviceModule, DeviceInfoModule, ManufacturerModule);
     cwmp_data_set_parameter_value(cwmp, cwmp->root, name, cwmp->cpe_mf, TRstrlen(cwmp->cpe_mf), cwmp->pool);
 
-    CWMP_SPRINTF_PARAMETER_NAME(name, 3, rootName, DeviceInfoModule, ManufacturerOUIModule);
+
+    CWMP_SPRINTF_PARAMETER_NAME(name, 3, InternetGatewayDeviceModule, DeviceInfoModule, ManufacturerOUIModule);
     cwmp_data_set_parameter_value(cwmp, cwmp->root, name, cwmp->cpe_oui, TRstrlen(cwmp->cpe_oui), cwmp->pool);
 
-    CWMP_SPRINTF_PARAMETER_NAME(name, 3, rootName, DeviceInfoModule, ProductClassModule);
+    CWMP_SPRINTF_PARAMETER_NAME(name, 3, InternetGatewayDeviceModule, DeviceInfoModule, ProductClassModule);
     cwmp_data_set_parameter_value(cwmp, cwmp->root, name, cwmp->cpe_pc, TRstrlen(cwmp->cpe_pc), cwmp->pool);
 
-    CWMP_SPRINTF_PARAMETER_NAME(name, 3, rootName, DeviceInfoModule, SerialNumberModule);
+    CWMP_SPRINTF_PARAMETER_NAME(name, 3, InternetGatewayDeviceModule, DeviceInfoModule, SerialNumberModule);
     cwmp_data_set_parameter_value(cwmp, cwmp->root, name, cwmp->cpe_sn, TRstrlen(cwmp->cpe_sn), cwmp->pool);
 
-    if (strncmp(rootName, ROOT_DATA_MODEL_TR181, strlen(ROOT_DATA_MODEL_TR181)) == 0) {
-        CWMP_SPRINTF_PARAMETER_NAME(name, 2, rootName, DMTR181Param_DeviceRootDMVer);
-        cwmp_data_set_parameter_value(cwmp, cwmp->root, name, DMTR181_ROOTDMVERSION, TRstrlen(DMTR181_ROOTDMVERSION), cwmp->pool);
-    }
 
     cwmp_agent_start_session(cwmp);
 
@@ -775,55 +744,55 @@ int cwmp_agent_upload_file(upload_arg_t * ularg)
     {
         char readbuf[1024];
         int readlen;
-    char targetfile[64];
-    FILE * uf;
-    int rc;
-    if(strcmp(ularg->filetype, "1 Vendor Configuration File") == 0)
-    {
-        //根据实际情况, 修改这里的配置文件路径
-        
-        uf = fopen("/tmp/mysystem.cfg", "rb");      
-    }
-    else if(strcmp(ularg->filetype, "2 Vendor Log File") == 0)
-    {
-        //根据实际情况, 修改这里的配置文件路径
-        uf = fopen("/tmp/mysystem.log", "rb");  
-    }
-    else
-    {
-        uf = fopen("/tmp/mysystem.log", "rb");  
-    }
+	char targetfile[64];
+	FILE * uf;
+	int rc;
+	if(strcmp(ularg->filetype, "1 Vendor Configuration File") == 0)
+	{
+		//¸ù¾ÝÊµ¼ÊÇé¿ö, ÐÞ¸ÄÕâÀïµÄÅäÖÃÎÄ¼þÂ·¾¶
+		
+		uf = fopen("/tmp/mysystem.cfg", "rb");		
+	}
+	else if(strcmp(ularg->filetype, "2 Vendor Log File") == 0)
+	{
+		//¸ù¾ÝÊµ¼ÊÇé¿ö, ÐÞ¸ÄÕâÀïµÄÅäÖÃÎÄ¼þÂ·¾¶
+		uf = fopen("/tmp/mysystem.log", "rb");	
+	}
+	else
+	{
+		uf = fopen("/tmp/mysystem.log", "rb");	
+	}
 
-        
+		
         while (uf != NULL)
         {
             readlen = fread(readbuf, 1024, 1,  uf);
             if (readlen <= 0)
             {
                 cwmp_log_debug("fetch io read zero. %s", readlen);
-            
+			
                 break;
             }
             readbuf[readlen] = 0;
 
-       rc = fetchIO_write(uploadfile, readbuf, readlen);
-       if(rc <= 0)
-       {
-        faultcode = 9001;
-        break;
-       }
-        
+	   rc = fetchIO_write(uploadfile, readbuf, readlen);
+	   if(rc <= 0)
+	   {
+		faultcode = 9001;
+		break;
+	   }
+		
         }
 
-    if(uf)
-    {
-        fclose(uf);
-    }
-    else
-    {
-        faultcode = 9001;
-    }
-    
+	if(uf)
+	{
+		fclose(uf);
+	}
+	else
+	{
+		faultcode = 9001;
+	}
+	
 
 
         cwmp_log_debug("upload file finished:  %s, file:%s", url, targetfile);
@@ -839,7 +808,7 @@ int cwmp_agent_upload_file(upload_arg_t * ularg)
 */
 
 
-#define HTTP_CODE_OK    200
+
 int cwmp_agent_download_file(download_arg_t * dlarg)
 {
     int faultcode = 0;
@@ -850,14 +819,14 @@ int cwmp_agent_download_file(download_arg_t * dlarg)
 
     if(dlarg->url && TRstrncasecmp("ftp://", dlarg->url, 6) == 0)
     {
-        return 9001;
-      }
+	    return 9001;
+	  }
 
     faultcode = http_receive_file(fromurl, tofile);
 
-    if(faultcode != HTTP_CODE_OK)
+    if(faultcode != CWMP_OK)
     {
-         faultcode = 9001;
+	     faultcode = 9001;
     }
    
 
@@ -874,27 +843,27 @@ int cwmp_agent_upload_file(upload_arg_t * ularg)
     FUNCTION_TRACE();
     char * fromfile;
 
-    if(strcpy(ularg->filetype, "1 Vendor Configuration File") == 0)
-    {
-        //根据实际情况, 修改这里的配置文件路径
-        
-        fromfile = "/tmp/mysystem.cfg";
-    }
-    else if(strcpy(ularg->filetype, "2 Vendor Log File") == 0)
-    {
-        //根据实际情况, 修改这里的配置文件路径
-        fromfile = "/tmp/mysystem.log";
-    }
-    else
-    {
-        fromfile = "/tmp/mysystem.cfg";
-    }
-    
+	if(strcpy(ularg->filetype, "1 Vendor Configuration File") == 0)
+	{
+		//¸ù¾ÝÊµ¼ÊÇé¿ö, ÐÞ¸ÄÕâÀïµÄÅäÖÃÎÄ¼þÂ·¾¶
+		
+		fromfile = "/tmp/mysystem.cfg";
+	}
+	else if(strcpy(ularg->filetype, "2 Vendor Log File") == 0)
+	{
+		//¸ù¾ÝÊµ¼ÊÇé¿ö, ÐÞ¸ÄÕâÀïµÄÅäÖÃÎÄ¼þÂ·¾¶
+		fromfile = "/tmp/mysystem.log";
+	}
+	else
+	{
+		fromfile = "/tmp/mysystem.cfg";
+	}
+	
     faultcode = http_send_file(fromfile, ularg->url);
 
     if(faultcode != CWMP_OK)
     {
-    faultcode = 9001;
+	faultcode = 9001;
     }
    
 
@@ -906,183 +875,85 @@ int cwmp_agent_upload_file(upload_arg_t * ularg)
 
 int cwmp_agent_run_tasks(cwmp_t * cwmp)
 {
-    void * data;
-    int tasktype = 0;;
-    int ok = CWMP_NO;
-    struct timeval now;
+	void * data;
+	int tasktype = 0;;
+	int ok = CWMP_NO;
 
-    FUNCTION_TRACE();
-    
-    while(1)
-    {
-        if(cwmp->pinform_enable == 0 || inform_time.tv_sec == 0 || cwmp->pinform_interval == 0){
-            queue_wait(cwmp->queue, 0);
-        }else{
-            queue_wait(cwmp->queue, cwmp->pinform_interval);
-        }
-        gettimeofday(&now, NULL);
-        if((cwmp->pinform_enable == 1) && (inform_time.tv_sec != 0) && (now.tv_sec >= (inform_time.tv_sec + cwmp->pinform_interval))){
-            cwmp_log_debug("Push periodic inform to queue");
-            queue_push(cwmp->queue, NULL, TASK_PERIODIC_INFORM);
-        }
-        tasktype = queue_pop(cwmp->queue, &data);
-        while(tasktype != -1)
-        {
-            //ok = CWMP_YES;
-            switch(tasktype)
-            {
-                case TASK_DOWNLOAD_TAG:
-                    {
-                        download_arg_t * dlarg = (download_arg_t*)data;
-                        //begin download file
-                        time_t starttime = time(NULL);
-                        time_t endtime = 0;
-                        int faultcode = 0, need_reboot = 0;
+	FUNCTION_TRACE();
+	
+	while(1)
+	{
+		tasktype = queue_pop(cwmp->queue, &data);
+		if(tasktype == -1)
+		{
+			cwmp_log_debug("no more task to run");
+			break;
+		}
+		ok = CWMP_YES;
+		switch(tasktype)
+		{
+			case TASK_DOWNLOAD_TAG:
+				{
+					download_arg_t * dlarg = (download_arg_t*)data;
+					//begin download file
+					time_t starttime = time(NULL);
+					int faultcode = 0;
 
-                        faultcode = cwmp_agent_download_file(dlarg);
-                        if (faultcode == HTTP_CODE_OK && dlarg && dlarg->filetype) {
-                            switch (atoi(dlarg->filetype)) {
-                                case 1: /* 1 Firmware Upgrade Image, "Download arguments" of TR-069 Protocol */
-                                    cwmp_log_debug("Validating Firmware ...");
-                                    system("ubus send \"system.event\" '{ \"prgm\":\"cwmpd\", "
-                                        "\"type\":\"event.firmware\", \"data\":{\"event\":\"upgrade\", "
-                                        "\"cur_version\":\"unspecify\", \"new_version\":\"unspecified\"}}'");
+					faultcode = cwmp_agent_download_file(dlarg);
+					
+					time_t endtime = time(NULL);
+					cwmp_event_set_value(cwmp, INFORM_TRANSFERCOMPLETE, 1,dlarg->cmdkey, faultcode, starttime, endtime);
+					
+					
+					FREE(dlarg);
+				}
+				break;
 
-                                    faultcode = qcsapi_flash_image_update("/tmp/download.img", qcsapi_image_linux_live);
-                                    if (faultcode < 0) {
-                                        cwmp_log_debug("%s() FW upgrade FAIL! Error code=%d.", __func__, faultcode);
-                                        faultcode = FAULT_CODE_9001;
-                                    }
-                                    else {
-                                        cwmp_log_debug("%s() FW upgrade successful! Reboot to apply", __func__);
-                                        faultcode = CWMP_OK;
+			case TASK_UPLOAD_TAG:
+				{
+					upload_arg_t * ularg = (upload_arg_t*)data;
+					//begin download file
+					time_t starttime = time(NULL);
+					int faultcode = 0;
+		
+					faultcode = cwmp_agent_upload_file(ularg);
+					
+					time_t endtime = time(NULL);
+					cwmp_event_set_value(cwmp, INFORM_TRANSFERCOMPLETE, 1,ularg->cmdkey, faultcode, starttime, endtime);
+					
+					
+					FREE(ularg);
+				}
+				break;
 
-                                        /* need reboot to apply new FW, then send 'TransferComplete message' */
-                                        need_reboot = 1;
-                                    }
+			case TASK_REBOOT_TAG:
+				{
+					//begin reboot system
+					cwmp_log_debug("reboot ...");
+					cwmp_event_set_value(cwmp, INFORM_MREBOOT, 1, NULL, 0, 0, 0);
+					cwmp_event_clear_active(cwmp);
+					//system("reboot");
+				}
+				break;
 
-                                    system("ubus send \"system.event\" '{ \"prgm\":\"cwmpd\", "
-                                        "\"type\":\"event.firmware\", \"data\":{\"event\":\"upgrade_done\", "
-                                        "\"cur_version\":\"unspecify\", \"new_version\":\"unspecified\"}}'");
-                                    system("rm -f /tmp/download.img");
+			case TASK_FACTORYRESET_TAG:
+				{
+					//begin factory reset system
+					cwmp_log_debug("factory reset ...");
+					
+					cwmp_event_clear_active(cwmp);
+					//system("factoryreset");
+				}
+				break;
 
-                                    break;
+			default:
 
-                                default:
-                                    cwmp_log_error("Not supported file type: %s", dlarg->filetype);
-                                    faultcode = FAULT_CODE_9000;
-                            }
-                        }
-                        else
-                            faultcode = FAULT_CODE_9001;
+				break;
 
-                        if (faultcode == FAULT_CODE_OK)
-                            endtime = time(NULL);
-                        cwmp_event_set_value(cwmp, INFORM_TRANSFERCOMPLETE, EVENT_REF_UNTIL_DELIVERED, dlarg->cmdkey, faultcode, starttime, endtime);
-                        cwmp_event_save_global(cwmp);
-                        FREE(dlarg);
+		}
+	}
 
-                        if (need_reboot) {
-                            cwmp_event_clear_active(cwmp);
-                            system("reboot");
-                        }
-
-                        /* Rise new_request at the end of event handler since they are in diff threads */
-                        if (faultcode)
-                            cwmp->new_request = CWMP_YES;
-                    }
-                    break;
-
-                case TASK_UPLOAD_TAG:
-                    {
-                        upload_arg_t * ularg = (upload_arg_t*)data;
-                        //begin download file
-                        time_t starttime = time(NULL);
-                        int faultcode = 0;
-
-                        faultcode = cwmp_agent_upload_file(ularg);
-
-                        time_t endtime = time(NULL);
-                        cwmp_event_set_value(cwmp, INFORM_TRANSFERCOMPLETE, EVENT_REF_UNTIL_DELIVERED,ularg->cmdkey, faultcode, starttime, endtime);
-
-
-                        FREE(ularg);
-                    }
-                    break;
-
-                case TASK_REBOOT_TAG:
-                    {
-                        char *key = (char *)data;
-                        //begin reboot system
-                        cwmp_log_debug("reboot ...");
-                        cwmp_event_set_value(cwmp, INFORM_MREBOOT, EVENT_REF_UNTIL_REBOOTED, key, 0, 0, 0);
-                        FREE(key);
-                        cwmp_event_save_global(cwmp);
-                        cwmp_event_clear_active(cwmp);
-
-                        system("reboot");
-                    }
-                    break;
-
-                case TASK_FACTORYRESET_TAG:
-                    {
-                        //begin factory reset system
-                        cwmp_log_debug("factory reset ...");
-                        cwmp_event_clear_active(cwmp);
-                        cwmp_event_set_value(cwmp, INFORM_BOOTSTRAP, EVENT_REF_UNTIL_DELIVERED, NULL, 0, 0, 0);
-                        cwmp_event_save_global(cwmp);
-
-                        system("spartan_restore_default");
-                    }
-                    break;
-                case TASK_NEIGHBORWIFIDIAG_TAG:
-                    {
-                        int ret = -1, i = 0;
-                        char *ifname = (char *)data;
-                        int trycount = 3;
-                        unsigned int neighbornum = 0;
-
-                        qweb_set_result_inv(ifname, SCAN_INACT_WAIT);
-                        ret = qcsapi_wifi_start_scan_ext(ifname, SCAN_FLAG);
-                        for(i = 0; i < trycount; i++){
-                            ret = qcsapi_wifi_wait_scan_completes(ifname, SCAN_TIMEOUT);
-                            if(ret == -ETIME){
-                                continue;
-                            }else if((ret == 1) || (ret == 0)){
-                                qtr069_param_set_neighborwifiDiag_State(cwmp, DIAGNOSTICSTATE, "Complete", strlen("Complete"), NULL);
-                                neighbornum = qtr069_param_set_neighborwifiDiag_resultnum(ifname);
-                                qtr069_param_add_neighborwifiDiag_obj(cwmp, DIAGNOSTICRESULT, neighbornum);
-                                break;
-                            }else if(ret == -EIO){
-                                qtr069_param_set_neighborwifiDiag_State(cwmp, DIAGNOSTICSTATE, "Error", strlen("Error"), NULL);
-                                break;
-                            }
-                        }
-                        if(ret == -ETIME){
-                            qtr069_param_set_neighborwifiDiag_State(cwmp, DIAGNOSTICSTATE, "Error", strlen("Error"), NULL);
-                        }
-                        cwmp_event_set_value(cwmp, INFORM_DIAGNOSTICSCOMPLETE, EVENT_REF_UNTIL_REBOOTED, NULL, 0, 0, 0);
-                        cwmp->new_request = CWMP_YES;
-                        FREE(ifname);
-                    }
-                    break;
-                case TASK_PERIODIC_INFORM:
-                    {
-                        cwmp_log_debug("do periodic inform task");
-                        cwmp_event_set_value(cwmp, INFORM_PERIODIC, EVENT_REF_UNTIL_DELIVERED, NULL, 0, 0, 0);
-                        cwmp->new_request = CWMP_YES;
-                        gettimeofday(&inform_time, NULL);
-                    }
-                    break;
-                default:
-
-                    break;
-
-            }
-            tasktype = queue_pop(cwmp->queue, &data);
-        }
-    }
-
-    return ok;
+	return ok;
 }
+
 
