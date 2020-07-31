@@ -424,11 +424,8 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
     if (!doc)
     {
         cwmp_log_debug("analyse create doc null\n");
-        //cwmp_chunk_write_string(session->writers, xml_fault, TRstrlen(xml_fault), session->envpool);
-        //goto finished;
-        session->newdata = CWMP_YES;
-        cwmp_write_doc_to_chunk(newdoc, session->writers,  session->envpool);
-        rc = CWMP_OK;
+        cwmp_chunk_write_string(session->writers, xml_fault, TRstrlen(xml_fault), session->envpool);
+        goto finished;
     }
 
     method = cwmp_get_rpc_method_name(doc);
