@@ -411,7 +411,7 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
 //        return CWMP_ERROR;
     }
     
-    doctmppool = pool_create(POOL_DEFAULT_SIZE);
+    doctmppool = pool_create(4096);
 
     xmlbuf = pool_palloc(doctmppool, msglength+32);
 
@@ -424,16 +424,16 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
     doc = XmlParseBuffer(doctmppool, xmlbuf);
 
     //cwmp_log_debug("doctmppool: %s\n", doctmppool);
-    cwmp_log_debug("POOL_DEFAULT_SIZE: %s\n", POOL_DEFAULT_SIZE);
-    /*
+    //cwmp_log_debug("POOL_DEFAULT_SIZE: %s\n", POOL_DEFAULT_SIZE);
+    
     if (!doc)
     {
         cwmp_log_debug("analyse create doc null\n");
         cwmp_chunk_write_string(session->writers, xml_fault, TRstrlen(xml_fault), session->envpool);
         goto finished;
-    }*/
-
-    //method = cwmp_get_rpc_method_name(doc);
+    }
+    method = cwmp_get_rpc_method_name(doc);
+    /*
     if (!doc){
         char* loc = strstr(xmlbuf, "cwmp:GetParameterNames");
         if (loc) {
@@ -441,7 +441,7 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
         }
     }else{
         method = cwmp_get_rpc_method_name(doc);
-    }
+    }*/
 
     cwmp_log_debug("analyse method is: %s\n", method);
 
