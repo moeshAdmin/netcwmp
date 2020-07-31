@@ -405,6 +405,7 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
     //if (1==1)
     //{
         session->newdata = CWMP_NO;
+        newdoc = NULL;
         cwmp_log_debug("analyse receive length is 0");
 	    goto eventcheck;
 //        return CWMP_ERROR;
