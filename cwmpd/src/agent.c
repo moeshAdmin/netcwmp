@@ -122,7 +122,7 @@ int cwmp_agent_create_datetimes(datatime_t *nowtime)
 
 
 
-//取得active event以及count
+//脠隆碌脙active event脪脭录掳count
 int cwmp_agent_get_active_event(cwmp_t *cwmp, cwmp_session_t * session,  event_list_t **pevent_list)
 {
     event_list_t * el;
@@ -423,10 +423,12 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
     doc = XmlParseBuffer(doctmppool, xmlbuf);
     if (!doc)
     {
-        cwmp_log_debug("analyse create doc null\n");
-        cwmp_chunk_write_string(session->writers, xml_fault, TRstrlen(xml_fault), session->envpool);
+        //cwmp_log_debug("analyse create doc null\n");
+        //cwmp_chunk_write_string(session->writers, xml_fault, TRstrlen(xml_fault), session->envpool);
+        //goto finished;
+        session->newdata = CWMP_YES;
+        rc = CWMP_OK;
         goto finished;
-
     }
 
     method = cwmp_get_rpc_method_name(doc);
@@ -751,13 +753,13 @@ int cwmp_agent_upload_file(upload_arg_t * ularg)
 	int rc;
 	if(strcmp(ularg->filetype, "1 Vendor Configuration File") == 0)
 	{
-		//根据实际情况, 修改这里的配置文件路径
+		//赂霉戮脻脢碌录脢脟茅驴枚, 脨脼赂脛脮芒脌茂碌脛脜盲脰脙脦脛录镁脗路戮露
 		
 		uf = fopen("/tmp/mysystem.cfg", "rb");		
 	}
 	else if(strcmp(ularg->filetype, "2 Vendor Log File") == 0)
 	{
-		//根据实际情况, 修改这里的配置文件路径
+		//赂霉戮脻脢碌录脢脟茅驴枚, 脨脼赂脛脮芒脌茂碌脛脜盲脰脙脦脛录镁脗路戮露
 		uf = fopen("/tmp/mysystem.log", "rb");	
 	}
 	else
@@ -847,13 +849,13 @@ int cwmp_agent_upload_file(upload_arg_t * ularg)
 
 	if(strcpy(ularg->filetype, "1 Vendor Configuration File") == 0)
 	{
-		//根据实际情况, 修改这里的配置文件路径
+		//赂霉戮脻脢碌录脢脟茅驴枚, 脨脼赂脛脮芒脌茂碌脛脜盲脰脙脦脛录镁脗路戮露
 		
 		fromfile = "/tmp/mysystem.cfg";
 	}
 	else if(strcpy(ularg->filetype, "2 Vendor Log File") == 0)
 	{
-		//根据实际情况, 修改这里的配置文件路径
+		//赂霉戮脻脢碌录脢脟茅驴枚, 脨脼赂脛脮芒脌茂碌脛脜盲脰脙脦脛录镁脗路戮露
 		fromfile = "/tmp/mysystem.log";
 	}
 	else
