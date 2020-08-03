@@ -437,7 +437,8 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
         cwmp_log_debug("6\n");
         pool_t * pool = pool_create(POOL_DEFAULT_SIZE);
         cwmp_log_debug("7\n");
-        doc = XmlParseBuffer(pool, buf);
+        doc = XmlParseBuffer(pool, xmlbuf);
+        //doc = XmlParseBuffer(pool, buf);
     //
     //doc = XmlParseBuffer(doctmppool, xmlbuf);
     if (!doc)
