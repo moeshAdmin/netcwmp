@@ -396,6 +396,7 @@ void cwmp_agent_start_session(cwmp_t * cwmp)
 int cwmp_agent_analyse_session(cwmp_session_t * session)
 {
     char * xmlbuf;
+    char * xmlbuf2;
     cwmp_uint32_t len;
     xmldoc_t *  doc;
     char * method;
