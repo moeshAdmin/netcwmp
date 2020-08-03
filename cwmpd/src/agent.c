@@ -424,7 +424,14 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
     strcpy(xmlbuf+len+msglength, "</cwmp>");
 
     cwmp_log_debug("agent analyse xml: \n%s", xmlbuf);
-    //
+ 
+    //doc = XmlParseBuffer(doctmppool, xmlbuf);
+
+    if (!doc)
+    {
+        //cwmp_log_debug("analyse create doc null\n");
+        //cwmp_chunk_write_string(session->writers, xml_fault, TRstrlen(xml_fault), session->envpool);
+        //goto finished;
         size_t xmllen, nread ;
         FILE * fp = fopen("/etc/device.xml", "rb");
         cwmp_log_debug("0\n%s", fp);
@@ -444,17 +451,12 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
         cwmp_log_debug("7\n");
         cwmp_log_debug("0\n%s", buf);
         doc = XmlParseBuffer(pool, buf);
-        //doc = XmlParseBuffer(pool, buf);
-    //
-    //doc = XmlParseBuffer(doctmppool, xmlbuf);
-    if (!doc)
-    {
-        cwmp_log_debug("analyse create doc null\n");
-        cwmp_chunk_write_string(session->writers, xml_fault, TRstrlen(xml_fault), session->envpool);
-        goto finished;
+        method = CWMP_RPC_GETPARAMETERNAMES;
+    }else{
+        method = cwmp_get_rpc_method_name(doc);
     }
 
-    method = cwmp_get_rpc_method_name(doc);
+    
     cwmp_log_debug("analyse method is: %s\n", method);
 
     cwmp_chunk_clear(session->writers);
