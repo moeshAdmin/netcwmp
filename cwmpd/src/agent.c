@@ -444,6 +444,7 @@ void cwmp_agent_start_session(cwmp_t * cwmp)
 int cwmp_agent_analyse_session(cwmp_session_t * session)
 {
     char * xmlbuf;
+    char * xmlbuf2;
     cwmp_uint32_t len;
     xmldoc_t *  doc;
     char * method;
@@ -467,14 +468,14 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
 
     xmlbuf = pool_palloc(doctmppool, msglength+32);
 
-    xmlbuf = str_replace(xmlbuf, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>","\0");  
-    len = sprintf(xmlbuf,"<cwmp>");
-    cwmp_chunk_copy(xmlbuf + len, session->readers, msglength);
-    strcpy(xmlbuf+len+msglength, "</cwmp>");
+    xmlbuf2 = str_replace(xmlbuf, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>","\0");  
+    len = sprintf(xmlbuf2,"<cwmp>");
+    cwmp_chunk_copy(xmlbuf2 + len, session->readers, msglength);
+    strcpy(xmlbuf2+len+msglength, "</cwmp>");
 
-    cwmp_log_debug("agent analyse xml: \n%s", xmlbuf);
+    cwmp_log_debug("agent analyse xml: \n%s", xmlbuf2);
  
-    doc = XmlParseBuffer(doctmppool, xmlbuf);
+    doc = XmlParseBuffer(doctmppool, xmlbuf2);
 
     if (!doc)
     {
