@@ -411,7 +411,7 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
     
     pool_t * doctmppool = pool_create(POOL_DEFAULT_SIZE);
 
-    xmlbuf = pool_palloc(doctmppool, msglength+32);
+    //xmlbuf = pool_palloc(doctmppool, msglength+32);
 
     len = sprintf(xmlbuf,"<cwmp>");
     cwmp_chunk_copy(xmlbuf + len, session->readers, msglength);
