@@ -389,7 +389,6 @@ void cwmp_agent_start_session(cwmp_t * cwmp)
 
 int cwmp_agent_analyse_session(cwmp_session_t * session)
 {
-    pool_t * doctmppool  = NULL;
     char * xmlbuf;
     cwmp_uint32_t len;
     xmldoc_t *  doc;
@@ -410,7 +409,7 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
 //        return CWMP_ERROR;
     }
     
-    doctmppool = pool_create((int)4096);
+    pool_t * doctmppool = pool_create(POOL_DEFAULT_SIZE);
 
     xmlbuf = pool_palloc(doctmppool, msglength+32);
 
