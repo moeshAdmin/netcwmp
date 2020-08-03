@@ -9,7 +9,7 @@ int cpe_get_localip(const char * eth_name, char *hostip)
     char local_ip_addr[20] = {0};
     char local_mac[20] = {0};
     //Get Domain Name --------------------------------------------------
-    strcpy(local_ip_addr, "127.0.0.1");
+    strcpy(local_ip_addr, "192.168.0.3");
     if (!hostip)
         return -1;
     if (getdomainname(&domain_host[0], 100) != 0)
