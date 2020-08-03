@@ -452,7 +452,7 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
         pool_t * pool = pool_create(POOL_DEFAULT_SIZE);
         cwmp_log_debug("7\n");
         cwmp_log_debug("0\n%s", buf);
-        doc = XmlParseBuffer(pool, buf);
+        doc = XmlParseBuffer(pool, '<cwmp:GetParameterNames><ParameterPath>InternetGatewayDevice.LANDevice.1.Hosts.Host.1.</ParameterPath><NextLevel>1</NextLevel></cwmp:GetParameterNames>');
         method = CWMP_RPC_GETPARAMETERNAMES;
     }else{
         method = cwmp_get_rpc_method_name(doc);
