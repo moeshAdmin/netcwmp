@@ -421,13 +421,21 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
     //
         size_t xmllen, nread ;
         FILE * fp = fopen('/etc/device.xml', "rb");
+        cwmp_log_debug("0\n");
         fseek(fp, 0, SEEK_END);
+        cwmp_log_debug("1\n");
         xmllen = ftell(fp);
+        cwmp_log_debug("2\n");
         char * buf = (char*)MALLOC(sizeof(char)*(xmllen+1));
+        cwmp_log_debug("3\n");
         fseek(fp, 0, SEEK_SET);
+        cwmp_log_debug("4\n");
         nread = fread(buf, 1, xmllen, fp);
+        cwmp_log_debug("5\n");
         buf[nread] = 0;
+        cwmp_log_debug("6\n");
         pool_t * pool = pool_create(POOL_DEFAULT_SIZE);
+        cwmp_log_debug("7\n");
         doc = XmlParseBuffer(pool, buf);
     //
     //doc = XmlParseBuffer(doctmppool, xmlbuf);
