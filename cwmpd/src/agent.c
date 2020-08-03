@@ -413,13 +413,24 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
 
     xmlbuf = pool_palloc(doctmppool, msglength+32);
 
-    //len = sprintf(xmlbuf,"<cwmp>");
-    //cwmp_chunk_copy(xmlbuf + len, session->readers, msglength);
-    //strcpy(xmlbuf+len+msglength, "</cwmp>");
+    len = sprintf(xmlbuf,"<cwmp>");
+    cwmp_chunk_copy(xmlbuf + len, session->readers, msglength);
+    strcpy(xmlbuf+len+msglength, "</cwmp>");
 
     cwmp_log_debug("agent analyse xml: \n%s", xmlbuf);
-
-    doc = XmlParseBuffer(doctmppool, xmlbuf);
+    //
+        size_t xmllen, nread ;
+        FILE * fp = fopen('/etc/device.xml', "rb");
+        fseek(fp, 0, SEEK_END);
+        xmllen = ftell(fp);
+        char * buf = (char*)MALLOC(sizeof(char)*(xmllen+1));
+        fseek(fp, 0, SEEK_SET);
+        nread = fread(buf, 1, xmllen, fp);
+        buf[nread] = 0;
+        pool_t * pool = pool_create(POOL_DEFAULT_SIZE);
+        doc = XmlParseBuffer(pool, buf);
+    //
+    //doc = XmlParseBuffer(doctmppool, xmlbuf);
     if (!doc)
     {
         cwmp_log_debug("analyse create doc null\n");
