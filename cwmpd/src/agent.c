@@ -31,6 +31,10 @@
 #include <cwmp/session.h>
 #include "modules/data_model.h"
 
+#include "cwmp/model.h"
+#include "cwmp/xmlet.h"
+#include "cwmp/log.h"
+
 #define CWMP_TRUE   1
 
 #define MAX_SESSION_RETRY 3
@@ -422,7 +426,7 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
     cwmp_log_debug("agent analyse xml: \n%s", xmlbuf);
     //
         size_t xmllen, nread ;
-        FILE * fp = fopen('/etc/device.xml', "rb");
+        FILE * fp = fopen("/etc/device.xml", "rb");
         cwmp_log_debug("0\n%s", fp);
         fseek(fp, 0, SEEK_END);
         cwmp_log_debug("1\n");
