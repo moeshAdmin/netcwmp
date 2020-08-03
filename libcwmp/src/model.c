@@ -413,6 +413,8 @@ int cwmp_model_load_xml(cwmp_t * cwmp, const char * xmlfile, model_func_t * func
     size_t xmllen, nread ;
 
     FILE * fp = fopen(xmlfile, "rb");
+    cwmp_log_debug("0_xmlfile\n%s", xmlfile);
+    cwmp_log_debug("0_fp\n%s", fp);
     if(!fp)
     {
         cwmp_log_error("xmlfile is NULL\n");
