@@ -421,9 +421,9 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
     xmlbuf = pool_palloc(doctmppool, msglength+32);
     xmlbuf2 = pool_palloc(doctmppool, msglength+32);
 
-    len = sprintf(xmlbuf,"\0");
+    len = sprintf(xmlbuf,"<cwmp>");
     cwmp_chunk_copy(xmlbuf + len, session->readers, msglength);
-    strcpy(xmlbuf+len+msglength, "\0");
+    strcpy(xmlbuf+len+msglength, "</cwmp>");
 
     cwmp_log_debug("agent analyse xml: \n%s", xmlbuf);
  

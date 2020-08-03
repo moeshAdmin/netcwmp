@@ -1071,7 +1071,7 @@ XmlParseBuffer(
         pool ,
 #endif
         buffer, &doc );
-    cwmp_log_debug("XML TEST %s",doc);
+    cwmp_log_debug("XML TEST %s",buffer);
     return doc;
 }
 
