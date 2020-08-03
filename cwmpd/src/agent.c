@@ -425,7 +425,7 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
 
     cwmp_log_debug("agent analyse xml: \n%s", xmlbuf);
  
-    //doc = XmlParseBuffer(doctmppool, xmlbuf);
+    doc = XmlParseBuffer(doctmppool, xmlbuf);
 
     if (!doc)
     {
