@@ -28,6 +28,7 @@
 #include "cwmp_agent.h"
 #include <cwmp/session.h>
 #include "modules/data_model.h"
+#include <stdio.h>
 
 #define CWMP_TRUE   1
 
