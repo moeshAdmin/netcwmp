@@ -1071,7 +1071,7 @@ XmlParseBuffer(
         pool ,
 #endif
         buffer, &doc );
-    cwmp_log_debug("XML TEST  USE_CWMP_MEMORY_POOL %s",USE_CWMP_MEMORY_POOL);
+    //cwmp_log_debug("XML TEST  USE_CWMP_MEMORY_POOL %s",USE_CWMP_MEMORY_POOL);
     cwmp_log_debug("XML TEST  buffer %s",buffer);
     //cwmp_log_debug("XML TEST  pool %s",pool);
     cwmp_log_debug("XML TEST %s",doc);
