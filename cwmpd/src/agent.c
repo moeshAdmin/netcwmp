@@ -49,54 +49,51 @@ enum
 };
 
 
-char *str_replace (char *source, char *find,  char *rep){  
-   // 搜尋文字的長度  
-   int find_L=strlen(find);  
-   // 替換文字的長度  
-   int rep_L=strlen(rep);  
-   // 結果文字的長度  
-   int length=strlen(source)+1;  
-   // 定位偏移量  
-   int gap=0;  
-     
-   // 建立結果文字，並複製文字  
-   char *result = (char*)malloc(sizeof(char) * length);  
-   strcpy(result, source);      
-     
-   // 尚未被取代的字串  
-   char *former=source;  
-   // 搜尋文字出現的起始位址指標  
-   char *location= strstr(former, find);  
-     
-   // 漸進搜尋欲替換的文字  
-   while(location!=NULL){  
-       // 增加定位偏移量  
-       gap+=(location - former);  
-       // 將結束符號定在搜尋到的位址上  
-       result[gap]='\0';  
-         
-       // 計算新的長度  
-       length+=(rep_L-find_L);  
-       // 變更記憶體空間  
-       result = (char*)realloc(result, length * sizeof(char));  
-       // 替換的文字串接在結果後面  
-       strcat(result, rep);  
-       // 更新定位偏移量  
-       gap+=rep_L;  
-         
-       // 更新尚未被取代的字串的位址  
-       former=location+find_L;  
-       // 將尚未被取代的文字串接在結果後面  
-       strcat(result, former);  
-         
-       // 搜尋文字出現的起始位址指標  
-       location= strstr(former, find);  
-   }      
-  
-   return result;  
-  
-}
+char * replace(
+    char const * const original, 
+    char const * const pattern, 
+    char const * const replacement
+) {
+  size_t const replen = strlen(replacement);
+  size_t const patlen = strlen(pattern);
+  size_t const orilen = strlen(original);
 
+  size_t patcnt = 0;
+  const char * oriptr;
+  const char * patloc;
+
+  // find how many times the pattern occurs in the original string
+  for (oriptr = original; patloc = strstr(oriptr, pattern); oriptr = patloc + patlen)
+  {
+    patcnt++;
+  }
+
+  {
+    // allocate memory for the new string
+    size_t const retlen = orilen + patcnt * (replen - patlen);
+    char * const returned = (char *) malloc( sizeof(char) * (retlen + 1) );
+
+    if (returned != NULL)
+    {
+      // copy the original string, 
+      // replacing all the instances of the pattern
+      char * retptr = returned;
+      for (oriptr = original; patloc = strstr(oriptr, pattern); oriptr = patloc + patlen)
+      {
+        size_t const skplen = patloc - oriptr;
+        // copy the section until the occurence of the pattern
+        strncpy(retptr, oriptr, skplen);
+        retptr += skplen;
+        // copy the replacement 
+        strncpy(retptr, replacement, replen);
+        retptr += replen;
+      }
+      // copy the rest of the string.
+      strcpy(retptr, oriptr);
+    }
+    return returned;
+  }
+}
 
 int cwmp_agent_retry_session(cwmp_session_t * session)
 {
@@ -468,8 +465,7 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
 
     xmlbuf = pool_palloc(doctmppool, msglength+32);
 
-    xmlbuf2 = str_replace(xmlbuf, "<\?xml","<cwmp");  
-    xmlbuf2 = str_replace(xmlbuf2, "\?>",">");  
+    xmlbuf2 = replace(xmlbuf, "<?xml", "<cwmp");
     len = sprintf(xmlbuf2,"\0");
     cwmp_chunk_copy(xmlbuf2 + len, session->readers, msglength);
     strcpy(xmlbuf2+len+msglength, "</cwmp>");
