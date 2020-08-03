@@ -436,7 +436,7 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
         FILE * fp = fopen("/etc/device.xml", "rb");
         cwmp_log_debug("0\n%s", fp);
         fseek(fp, 0, SEEK_END);
-        cwmp_log_debug("1111\n");
+        cwmp_log_debug("112222\n");
         xmllen = ftell(fp);
         cwmp_log_debug("2\n");
         char * buf = (char*)MALLOC(sizeof(char)*(xmllen+1));
