@@ -1129,7 +1129,7 @@ int cwmp_session_send_request(cwmp_session_t * session)
     http_request_create(&request, session->envpool);
     request->dest = session->dest;
 
-    cwmp_log_debug("SESSION DATA %s", session->last_method);
+    //cwmp_log_debug("SESSION DATA %s", session->last_method);
 
     if(session->dest->auth_type == HTTP_DIGEST_AUTH)
     {
