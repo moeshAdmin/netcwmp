@@ -880,9 +880,9 @@ xmldoc_t *  cwmp_session_create_getparameternames_response_message(cwmp_session_
     {
         cwmp_log_error("no header node \n");
     }
-
+    cwmp_log_debug("0\n");
     rv = cwmp_parse_getparameternames_message(session->env, doc, &path, &next_level, &fault);
-
+    cwmp_log_debug("1\n");
     if (path[strlen(path)-1] == '.')
     {
         next_subset = CWMP_YES;
@@ -891,9 +891,9 @@ xmldoc_t *  cwmp_session_create_getparameternames_response_message(cwmp_session_
     {
         next_subset = CWMP_NO;
     }
-
+    cwmp_log_debug("2\n");
     node = cwmp_get_parameter_path_node(session->root, path);
-
+    cwmp_log_debug("3\n");
 
     return cwmp_create_getparameternames_response_message(session->env, header, path, node, next_subset, next_level);
 }
