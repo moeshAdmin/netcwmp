@@ -1197,25 +1197,19 @@ int cwmp_parse_header_node(xmlnode_t * node, header_t ** header, pool_t * pool)
         value = cwmp_xml_get_node_value(cwmpIdNode);
         if ((cwmpIdNode != NULL) || (value != NULL))
         {
-            cwmp_log_debug("0\n");
             (*header)->id = pool_pcalloc(pool, CWMP_HEAD_MAX+1);
             TRstrncpy((*header)->id, value, CWMP_HEAD_MAX);
         }
-        cwmp_log_debug("1\n");
         if (cwmpHoldRequestsNode != NULL)
         {
-            cwmp_log_debug("2\n");
             value = cwmp_xml_get_node_value(cwmpHoldRequestsNode);
             (*header)->hold_requests = TRatoi(value);
         }
-        cwmp_log_debug("3\n");
         if (cwmpNoMoreRequestsNode != NULL)
         {
-            cwmp_log_debug("4\n");
             value = cwmp_xml_get_node_value(cwmpNoMoreRequestsNode);
             (*header)->no_more_requests = TRatoi(value);
         }
-        cwmp_log_debug("5\n");
 
         return CWMP_OK;
     }
@@ -1262,16 +1256,22 @@ int cwmp_parse_getparameternames_message(env_t * env, xmldoc_t * doc, char ** pa
     xmlnode_t * cwmpParamPath;
     xmlnode_t * cwmpNextLevel;
     const char * nl;
+    cwmp_log_debug("4\n");
     xmlnode_t * node = cwmp_get_rpc_method_node(doc);
-
+    cwmp_log_debug("5\n");
     cwmpParamPath = cwmp_xml_get_child_with_name(node, CWMP_XML_GETPARAMETERNAMES_PARAMETERPATH);
+    cwmp_log_debug("6\n");
     cwmpNextLevel = cwmp_xml_get_child_with_name(node, CWMP_XML_GETPARAMETERNAMES_NEXTLEVEL);
+    cwmp_log_debug("7\n");
     if (path_name)
     {
+        cwmp_log_debug("8\n");
         *path_name = pool_pstrdup(env->pool, cwmp_xml_get_node_value(cwmpParamPath));
-
+        cwmp_log_debug("9\n");
     }
+    cwmp_log_debug("10\n");
     nl = cwmp_xml_get_node_value(cwmpNextLevel);
+    cwmp_log_debug("11\n");
     if (!nl)
     {
         cwmp_log_error("Invalid GetParameterNames NextLevel is null");
@@ -1285,6 +1285,7 @@ int cwmp_parse_getparameternames_message(env_t * env, xmldoc_t * doc, char ** pa
     {
         (*next_level) = 0;
     }
+    cwmp_log_debug("12\n");
     return CWMP_OK;
 }
 
