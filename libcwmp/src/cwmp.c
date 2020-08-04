@@ -1197,22 +1197,25 @@ int cwmp_parse_header_node(xmlnode_t * node, header_t ** header, pool_t * pool)
         value = cwmp_xml_get_node_value(cwmpIdNode);
         if ((cwmpIdNode != NULL) || (value != NULL))
         {
+            cwmp_log_debug("0\n");
             (*header)->id = pool_pcalloc(pool, CWMP_HEAD_MAX+1);
             TRstrncpy((*header)->id, value, CWMP_HEAD_MAX);
         }
-
+        cwmp_log_debug("1\n");
         if (cwmpHoldRequestsNode != NULL)
         {
+            cwmp_log_debug("2\n");
             value = cwmp_xml_get_node_value(cwmpHoldRequestsNode);
             (*header)->hold_requests = TRatoi(value);
         }
-
+        cwmp_log_debug("3\n");
         if (cwmpNoMoreRequestsNode != NULL)
         {
+            cwmp_log_debug("4\n");
             value = cwmp_xml_get_node_value(cwmpNoMoreRequestsNode);
             (*header)->no_more_requests = TRatoi(value);
         }
-
+        cwmp_log_debug("5\n");
 
         return CWMP_OK;
     }
