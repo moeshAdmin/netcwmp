@@ -893,9 +893,7 @@ xmldoc_t *  cwmp_session_create_getparameternames_response_message(cwmp_session_
         next_subset = CWMP_NO;
     }*/
     next_subset = CWMP_NO;
-    cwmp_log_debug("2\n");
     node = cwmp_get_parameter_path_node(session->root, path);
-    cwmp_log_debug("3\n");
 
     return cwmp_create_getparameternames_response_message(session->env, header, path, node, next_subset, next_level);
 }
@@ -1138,12 +1136,12 @@ int cwmp_session_send_request(cwmp_session_t * session)
             //post empty
             //receive msg
 
-            http_post(session->sock, request, session->writers, session->envpool);
+            http_post(session->sock, request, NULL, session->envpool);
             rv = cwmp_session_recv_response(session);
         }
     }
 
-    rv = http_post(session->sock, request, NULL, session->envpool);
+    rv = http_post(session->sock, request, session->writers, session->envpool);
 
 
     if (rv <= 0)
