@@ -894,6 +894,8 @@ xmldoc_t *  cwmp_session_create_getparameternames_response_message(cwmp_session_
         next_subset = CWMP_NO;
     }*/
     next_subset = CWMP_NO;
+    cwmp_log_debug("session->root===%d",session->root);
+    cwmp_log_debug("path===%d",path);
     node = cwmp_get_parameter_path_node(session->root, path);
 
     return cwmp_create_getparameternames_response_message(session->env, header, path, node, next_subset, next_level);
