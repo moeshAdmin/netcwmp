@@ -441,7 +441,6 @@ void cwmp_agent_start_session(cwmp_t * cwmp)
 int cwmp_agent_analyse_session(cwmp_session_t * session)
 {
     char * xmlbuf;
-    char * xmlbuf2;
     cwmp_uint32_t len;
     xmldoc_t *  doc;
     char * method;
@@ -469,41 +468,19 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
     cwmp_chunk_copy(xmlbuf + len, session->readers, msglength);
     strcpy(xmlbuf+len+msglength, "</cwmp>");
 
-    xmlbuf2 = replace(xmlbuf, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "\0");
-    cwmp_log_debug("agent analyse xml: \n%s", xmlbuf2);
+    xmlbuf = replace(xmlbuf, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "\0");
+    cwmp_log_debug("agent analyse xml: \n%s", xmlbuf);
  
-    doc = XmlParseBuffer(doctmppool, xmlbuf2);
+    doc = XmlParseBuffer(doctmppool, xmlbuf);
 
     if (!doc)
     {
         cwmp_log_debug("analyse create doc null\n");
         cwmp_chunk_write_string(session->writers, xml_fault, TRstrlen(xml_fault), session->envpool);
         goto finished;
-        /*
-        size_t xmllen, nread ;
-        FILE * fp = fopen("/etc/device.xml", "rb");
-        cwmp_log_debug("0\n%s", fp);
-        fseek(fp, 0, SEEK_END);
-        cwmp_log_debug("112222\n");
-        xmllen = ftell(fp);
-        cwmp_log_debug("2\n");
-        char * buf = (char*)MALLOC(sizeof(char)*(xmllen+1));
-        cwmp_log_debug("3\n");
-        fseek(fp, 0, SEEK_SET);
-        cwmp_log_debug("4\n");
-        nread = fread(buf, 1, xmllen, fp);
-        cwmp_log_debug("5\n");
-        buf[nread] = 0;
-        cwmp_log_debug("6\n");
-        pool_t * pool = pool_create(POOL_DEFAULT_SIZE);
-        cwmp_log_debug("7\n");
-        cwmp_log_debug("0\n%s", buf);
-        doc = XmlParseBuffer(pool, buf);
-        method = CWMP_RPC_GETPARAMETERNAMES;*/
     }else{
         method = cwmp_get_rpc_method_name(doc);
     }
-
     
     cwmp_log_debug("analyse method is: %s\n", method);
 
