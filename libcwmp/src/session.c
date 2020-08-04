@@ -1136,7 +1136,7 @@ int cwmp_session_send_request(cwmp_session_t * session)
             //post empty
             //receive msg
 
-            http_post(session->sock, request, NULL, session->envpool);
+            http_post(session->sock, request, session->writers, session->envpool);
             rv = cwmp_session_recv_response(session);
         }
     }else{
