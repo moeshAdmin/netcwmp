@@ -265,7 +265,6 @@ void cwmp_agent_start_session(cwmp_t * cwmp)
         session = cwmp_session_create(cwmp);
         session_close  = CWMP_NO;
         session->timeout = cwmp_conf_get_int("cwmpd:http_timeout");
-        session->last_method = "\0";
         //cwmp_session_set_timeout(cwmp_conf_get_int("cwmpd:http_timeout"));
         cwmp_log_debug("session timeout is %d", session->timeout);
 		

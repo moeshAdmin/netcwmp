@@ -375,6 +375,7 @@ cwmp_session_t * cwmp_session_create(cwmp_t * cwmp)
     session->timeout = 0;
     session->envpool = NULL;
     session->connpool = NULL;
+    session->last_method = NULL;
 
     session->root = cwmp->root;
     session->retry_count = 0;
