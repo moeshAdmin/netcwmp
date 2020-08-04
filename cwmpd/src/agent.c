@@ -249,6 +249,7 @@ void cwmp_agent_start_session(cwmp_t * cwmp)
     xmldoc_t * newdoc;
     FUNCTION_TRACE();
     event_list_t  *evtlist;
+    session->last_method = "\0";
     while (TRUE)
     {
         if (cwmp->new_request == CWMP_NO)
@@ -481,12 +482,13 @@ int cwmp_agent_analyse_session(cwmp_session_t * session)
     }else{
         method = cwmp_get_rpc_method_name(doc);
     }
-    
+
+    session->last_method = method;
+
     cwmp_log_debug("analyse method is: %s\n", method);
 
     cwmp_chunk_clear(session->writers);
     pool_clear(session->envpool);
-
 
     if (TRstrcmp(method, CWMP_RPC_GETRPCMETHODS) == 0)
     {
