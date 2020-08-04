@@ -1173,7 +1173,7 @@ int cwmp_session_recv_response(cwmp_session_t * session)
 
     session->last_code = response->status;
 
-    if(respcode != HTTP_200&&response->status != 204)
+    if(respcode != HTTP_200)
     {
         cwmp_log_error("http read response failed. return code is %d, %d", respcode, response->status);
 
