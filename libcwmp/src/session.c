@@ -1125,7 +1125,7 @@ int cwmp_session_send_request(cwmp_session_t * session)
     FUNCTION_TRACE();
 
     cwmp_log_debug("session dest url: %s", session->dest->url);
-
+    cwmp_log_debug("last_method %d", session->last_method);
     http_request_create(&request, session->envpool);
     request->dest = session->dest;
 
