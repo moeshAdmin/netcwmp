@@ -319,9 +319,8 @@ void cwmp_agent_start_session(cwmp_t * cwmp)
                 cwmp_log_debug("session stutus: SEND");
                 cwmp_log_debug("session data request length: %d", cwmp_chunk_length(session->writers));
                 session->newdata = CWMP_NO;
-
+                cwmp_log_debug("last_method %d", session->last_method);
                 rv = cwmp_agent_send_request(session);
-                
 
                 if (rv == CWMP_OK)
                 {

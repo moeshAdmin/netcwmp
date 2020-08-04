@@ -1129,8 +1129,6 @@ int cwmp_session_send_request(cwmp_session_t * session)
     http_request_create(&request, session->envpool);
     request->dest = session->dest;
 
-    cwmp_log_debug("CWMP_RPC_INFORM %s", session->writers);
-
     if(session->dest->auth_type == HTTP_DIGEST_AUTH)
     {
         if(!session->dest->auth.active)
