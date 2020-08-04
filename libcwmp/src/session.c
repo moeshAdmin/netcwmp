@@ -1128,25 +1128,21 @@ int cwmp_session_send_request(cwmp_session_t * session)
     http_request_create(&request, session->envpool);
     request->dest = session->dest;
 
-    cwmp_log_debug("SESSION DATA %s", session);
+    cwmp_log_debug("SESSION DATA %s", session->dest);
 
     if(session->dest->auth_type == HTTP_DIGEST_AUTH)
     {
-        cwmp_log_debug("auth_1");
         if(!session->dest->auth.active)
         {
             //post empty
             //receive msg
-            cwmp_log_debug("auth_3");
             http_post(session->sock, request, session->writers, session->envpool);
             rv = cwmp_session_recv_response(session);
             rv = http_post(session->sock, request, NULL, session->envpool);
         }
-        rv = http_post(session->sock, request, session->writers, session->envpool);
-    }else{
-        cwmp_log_debug("auth_2");
-        rv = http_post(session->sock, request, session->writers, session->envpool);
     }
+
+    rv = http_post(session->sock, request, session->writers, session->envpool);
 
     if (rv <= 0)
     {
